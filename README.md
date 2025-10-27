@@ -3,6 +3,14 @@ PixelAnimate2
 
 The main Android app for PIXEL:LED ART http://ledpixelart.com . Use Android Studio
 
+__Updates__
+This should now sync and compile in Android Studio 4  (2025.1.4)
+Includes the PixelAndroidLibrary code since I needed to add the Pixel v1 panel back.
+
+This is a fork of the PlayStore app at: https://play.google.com/store/apps/details?id=com.ledpixelart.piledriver
+The Hardware is described at: https://www.instructables.com/PIXEL-Interactive-LED-Art/
+Additional Software notes at: https://ledpixelart.com/for-developers-2/
+
 __Explanation of GIF decoding__
 
 Original file is rain.gif
