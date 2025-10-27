@@ -26,10 +26,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-//import android.support.v4.app.ActivityCompat;
-//import android.support.v4.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -279,26 +277,71 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 	private Canvas canvas;
 	private static Canvas canvasIOIO;
 	
-	private static String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
-    private static String basepath = extStorageDirectory;
+	// Updated to use app-specific external storage for modern Android compatibility
+	private static String extStorageDirectory;
+    private static String basepath;
    
-    public static String decodedDirPath =  Environment.getExternalStorageDirectory() + "/pixel/gif/decoded"; 
+    public static String decodedDirPath;
     
-    public static String GIFPath =  Environment.getExternalStorageDirectory() + "/pixel/gif/"; //put the pngs (for display purposes) and the gifs together in this same dir, code should take the png if it exists, otherwise take the gif
-    public static String PNGPath =  Environment.getExternalStorageDirectory() + "/pixel/png/"; //static pngs
-    public static String PNG64Path =  Environment.getExternalStorageDirectory() + "/pixel/png64/"; //static pngs 64x64
-	public static String PNG128Path =  Environment.getExternalStorageDirectory() + "/pixel/png128/"; //static pngs 64x64
-    public static String GIF64Path =  Environment.getExternalStorageDirectory() + "/pixel/gif64/";  //gifs 64x64, there will be a decoded directory here
-	public static String GIF128Path =  Environment.getExternalStorageDirectory() + "/pixel/gif128/";
-	public static String PNG16Path =  Environment.getExternalStorageDirectory() + "/pixel/png16/"; //static pngs 32x16
-    public static String GIF16Path =  Environment.getExternalStorageDirectory() + "/pixel/gif16/";  //gifs 32x16, there will be a decoded directory here
-    public static String userPNGPath =  Environment.getExternalStorageDirectory() + "/pixel/userpng/"; //user supplied pngs
-    public static String userGIFPath =  Environment.getExternalStorageDirectory() + "/pixel/usergif/";  //user supplied gifs, there will be a decoded directory here
-    public static String FavPNGPath =  Environment.getExternalStorageDirectory() + "/pixel/favpng/"; //user supplied pngs
-    public static String FavGIFPath =  Environment.getExternalStorageDirectory() + "/pixel/favgif/";  //user supplied gifs, there will be a decoded directory here
+    public static String GIFPath;
+    public static String PNGPath;
+    public static String PNG64Path;
+	public static String PNG128Path;
+    public static String GIF64Path;
+	public static String GIF128Path;
+	public static String PNG16Path;
+    public static String GIF16Path;
+    public static String userPNGPath;
+    public static String userGIFPath;
+    public static String FavPNGPath;
+    public static String FavGIFPath;
    
     private static Context context;
     private Context frameContext;
+    
+    /**
+     * Initialize storage paths using app-specific external storage for modern Android compatibility
+     */
+    private static void initializeStoragePaths(Context appContext) {
+        if (appContext == null) return;
+        
+        // Use app-specific external files directory instead of deprecated getExternalStorageDirectory()
+        File externalFilesDir = appContext.getExternalFilesDir(null);
+        if (externalFilesDir == null) {
+            // Fallback to internal storage if external is not available
+            externalFilesDir = new File(appContext.getFilesDir(), "pixel");
+        } else {
+            externalFilesDir = new File(externalFilesDir, "pixel");
+        }
+        
+        extStorageDirectory = externalFilesDir.getAbsolutePath();
+        basepath = extStorageDirectory;
+        
+        // Initialize all path variables
+        decodedDirPath = extStorageDirectory + "/gif/decoded";
+        GIFPath = extStorageDirectory + "/gif/";
+        PNGPath = extStorageDirectory + "/png/";
+        PNG64Path = extStorageDirectory + "/png64/";
+        PNG128Path = extStorageDirectory + "/png128/";
+        GIF64Path = extStorageDirectory + "/gif64/";
+        GIF128Path = extStorageDirectory + "/gif128/";
+        PNG16Path = extStorageDirectory + "/png16/";
+        GIF16Path = extStorageDirectory + "/gif16/";
+        userPNGPath = extStorageDirectory + "/userpng/";
+        userGIFPath = extStorageDirectory + "/usergif/";
+        FavPNGPath = extStorageDirectory + "/favpng/";
+        FavGIFPath = extStorageDirectory + "/favgif/";
+        
+        // Ensure the base directory exists
+        externalFilesDir.mkdirs();
+    }
+    
+    /**
+     * Get the unzip location for expansion files
+     */
+    private String getUnzipLocation() {
+        return extStorageDirectory + "/";
+    }
 	
 	///********** Timers
 	private boolean noSleep = false;	
@@ -435,7 +478,7 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 	
 	private String zipFilename = ""; 
      
-    private String unzipLocation = Environment.getExternalStorageDirectory() + "/pixel/"; 
+    private String unzipLocation; 
     private SharedPreferences.Editor editor;
     
     //Edit these variables when updating the patch APK expansion files
@@ -477,6 +520,8 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 	
 	private boolean AutoSelectPanel_ = true;
 	public static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 123;
+	public static final int MY_PERMISSIONS_REQUEST_BLUETOOTH_CONNECT = 124;
+	public static final int MY_PERMISSIONS_REQUEST_BLUETOOTH_SCAN = 125;
 
 	
 	/*this next set of code is for the APK expansion downloader service, 
@@ -686,7 +731,7 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 	        APKExpansionPathMainFile = new File(root.toString() + EXP_PATH + packageName + "/" + APKExpansionPathMain);
 	        APKExpansionPathPatchFile = new File(root.toString() + EXP_PATH + packageName + "/" + APKExpansionPathPatch);
 	        
-	        unzipLocation = Environment.getExternalStorageDirectory() + "/pixel/"; 
+	        unzipLocation = getUnzipLocation(); 
 	        
 	        mainAPKExpFileSizeLast = prefs.getLong("APKExpMainFileSizePref", 0);
 	        patchAPKExpFileSieLast = prefs.getLong("APKExpPatchFileSizePref", 0);
@@ -835,7 +880,7 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
             
             APKExpansionPathMain = APKExpansionPath[0];
             APKExpansionPathPatch = APKExpansionPath[1];
-            unzipLocation = Environment.getExternalStorageDirectory() + "/pixel/"; 
+            unzipLocation = getUnzipLocation(); 
         	
         	mDashboard.setVisibility(View.VISIBLE);
             mCellMessage.setVisibility(View.GONE);
@@ -1048,6 +1093,20 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
                 return;
               
             }
+            
+            case MY_PERMISSIONS_REQUEST_BLUETOOTH_CONNECT: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Bluetooth permission was granted, yay!
+                    showToast("Bluetooth permission granted");
+                } else {
+                    // Bluetooth permission denied
+                    showToast("Bluetooth permission denied. App may not function properly.");
+                }
+                return;
+            }
+            
             // other 'case' lines to check for other
             // permissions this app might request.
         }
@@ -1060,6 +1119,32 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Initialize storage paths for modern Android compatibility
+		initializeStoragePaths(this);
+		context = this;
+		
+		// Check Bluetooth permissions FIRST for Android 12+ (API 31+)
+		// This must happen before any Bluetooth operations
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			if (ContextCompat.checkSelfPermission(MainActivity.this,
+					Manifest.permission.BLUETOOTH_CONNECT)
+					!= PackageManager.PERMISSION_GRANTED) {
+				
+				if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+						Manifest.permission.BLUETOOTH_CONNECT)) {
+					// Show explanation if needed
+					showToast("This app needs Bluetooth permissions to connect to PIXEL devices.");
+				} else {
+					// Request the permission immediately
+					ActivityCompat.requestPermissions(MainActivity.this,
+							new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN},
+							MY_PERMISSIONS_REQUEST_BLUETOOTH_CONNECT);
+					// Don't return, continue with app initialization
+					// The permission will be requested but we'll continue
+				}
+			}
+		}
 		
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		 setContentView(R.layout.main);
@@ -1254,14 +1339,14 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
    		        // app-defined int constant. The callback method gets the
    		        // result of the request.
    		    }
-   		} else {
-   		    // Permission has already been granted so we are good
-   			
-   		}
+    		} else {
+    		    // Permission has already been granted so we are good
+    			
+    		}
  		 
         if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
 
-            extStorageDirectory = Environment.getExternalStorageDirectory().toString();
+            // extStorageDirectory is now initialized in initializeStoragePaths()
             	
             	File artdir = new File(GIFPath);
             	File PNGdir = new File(PNGPath);
@@ -1716,6 +1801,8 @@ public class MainActivity extends IOIOActivity implements OnItemClickListener, O
 		    copyGIF128Source();
 		    copyGIF128Decoded();
 			copyGIF16();
+			copyGIF16Source();
+			copyGIF16Decoded();
 			copyPNG64();
 		    copyPNG128();
 			copyGIFSource();
@@ -2188,6 +2275,70 @@ private void copyGIF64Source() {
 	           }       
 	       }
 	   } //end copyGIF16
+	   
+	   private void copyGIF16Source() {
+	   	
+	   	AssetManager assetManager = getResources().getAssets();
+	       String[] files = null;
+	       try {
+	           files = assetManager.list("gif16/gifsource");
+	       } catch (Exception e) {
+	           Log.e("read clipart ERROR", e.toString());
+	           e.printStackTrace();
+	       }
+	       for(int i=0; i<files.length; i++) {
+	       	progress_status ++;
+		  		publishProgress(progress_status);  
+	           InputStream in = null;
+	           OutputStream out = null;
+	           try {
+	            in = assetManager.open("gif16/gifsource/" + files[i]);
+	            out = new FileOutputStream(GIF16Path + "gifsource/" + files[i]);
+	             copyFile(in, out);
+	             in.close();
+	             in = null;
+	             out.flush();
+	             out.close();
+	             out = null;
+	           
+	           } catch(Exception e) {
+	               Log.e("copy clipart ERROR", e.toString());
+	               e.printStackTrace();
+	           }       
+	       }
+	   } //end copyGIF16Source
+	   
+	   private void copyGIF16Decoded() {
+	   	
+	   	AssetManager assetManager = getResources().getAssets();
+	       String[] files = null;
+	       try {
+	           files = assetManager.list("gif16/decoded");
+	       } catch (Exception e) {
+	           Log.e("read clipart ERROR", e.toString());
+	           e.printStackTrace();
+	       }
+	       for(int i=0; i<files.length; i++) {
+	       	progress_status ++;
+		  		publishProgress(progress_status);  
+	           InputStream in = null;
+	           OutputStream out = null;
+	           try {
+	            in = assetManager.open("gif16/decoded/" + files[i]);
+	            out = new FileOutputStream(GIF16Path + "decoded/" + files[i]);
+	             copyFile(in, out);
+	             in.close();
+	             in = null;
+	             out.flush();
+	             out.close();
+	             out = null;
+	           
+	           } catch(Exception e) {
+	               Log.e("copy clipart ERROR", e.toString());
+	               e.printStackTrace();
+	           }       
+	       }
+	   } //end copyGIF16Decoded
 		
 } //end async task
 	 
@@ -2251,7 +2402,7 @@ private void copyGIF64Source() {
                   PendingIntent pendingIntent = PendingIntent.getActivity(
                           MainActivity.this,
                           0, intentToLaunchThisActivityFromNotification,
-                          PendingIntent.FLAG_UPDATE_CURRENT);
+                          PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                   // Request to start the download
                   int startResult = DownloaderClientMarshaller.startDownloadServiceIfRequired(this,
                           pendingIntent, PIXELDownloaderService.class);
@@ -3524,18 +3675,18 @@ public boolean onItemLongClick(final AdapterView<?> parent, View v, final int po
     						String PixelDir = Pixel.getPixelDir(originalImagePath);  //usergif or userpng or gif16
     						String fname_no_extension = Pixel.getNameOnly(originalImagePath); //get the name of the select file but without the extension
     					    
-    						File gifSourcePath = new File(Environment.getExternalStorageDirectory() + "/pixel/" + PixelDir + "/gifsource/" + fname_no_extension + ".gif");
+    						File gifSourcePath = new File(extStorageDirectory + "/" + PixelDir + "/gifsource/" + fname_no_extension + ".gif");
     						if (gifSourcePath.exists()) {
     							gifSourcePath.delete();
    							 	//we don't need to update the gridview here, this dir is not used for displaying
    					  		}
     						
-    						File decodedTXT = new File(Environment.getExternalStorageDirectory() + "/pixel/" + PixelDir + "/decoded/" + fname_no_extension + ".txt");
+    						File decodedTXT = new File(extStorageDirectory + "/" + PixelDir + "/decoded/" + fname_no_extension + ".txt");
     						if (decodedTXT.exists()) {
     							decodedTXT.delete();
    					  		}
     						
-    						File decodedRGB565 = new File(Environment.getExternalStorageDirectory() + "/pixel/" + PixelDir + "/decoded/" + fname_no_extension + ".rgb565");
+    						File decodedRGB565 = new File(extStorageDirectory + "/" + PixelDir + "/decoded/" + fname_no_extension + ".rgb565");
     						if (decodedRGB565.exists()) {
     							decodedRGB565.delete();
    					  		}
@@ -4841,6 +4992,9 @@ public class UnFavoriteGIFMoveAsync extends AsyncTask<Void, Integer, Void>{
 		 case 24:
 			 BitmapInputStream = context.getResources().openRawResource(R.raw.decoding128by32);
 			 break;
+		 case 25:
+			 BitmapInputStream = context.getResources().openRawResource(R.raw.decoding32);
+			 break;
 
 			 default:
 	    	 BitmapInputStream = context.getResources().openRawResource(R.raw.decoding32);
@@ -5448,7 +5602,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 	    final long SIZE_KB = 1024L;
 	    final long SIZE_MB = SIZE_KB * SIZE_KB;
 	    long availableSpace = -1L;
-	    StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+	    StatFs stat = new StatFs(extStorageDirectory);
 	    availableSpace = (long) stat.getAvailableBlocks() * (long) stat.getBlockSize();
 	    return availableSpace/SIZE_MB;
 	  }
@@ -5604,6 +5758,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	frame_length = 2048;
 				    	currentResolution = 32; 
+						Log.i(LOG_TAG,"BENN: HardwareID Q");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("T")) {
 		    	 		matrix_model = 14;
@@ -5611,6 +5766,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.select64by64);
 				    	frame_length = 8192;
 				    	currentResolution = 128; 
+						Log.i(LOG_TAG,"BENN: HardwareID T");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("I")) {
 		    	 		matrix_model = 1; 
@@ -5618,6 +5774,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage16);
 				    	frame_length = 1024;
 				    	currentResolution = 16;
+						Log.i(LOG_TAG,"BENN: HardwareID I");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("L")) { //low power
 		    	 		matrix_model = 1; 
@@ -5625,6 +5782,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage16);
 				    	frame_length = 1024;
 				    	currentResolution = 16;
+						Log.i(LOG_TAG,"BENN: HardwareID L");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("C")) {
 		    	 		matrix_model = 12; 
@@ -5632,6 +5790,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	frame_length = 2048;
 				    	currentResolution = 32; 
+						Log.i(LOG_TAG,"BENN: HardwareID C");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("R")) {
 		    	 		matrix_model = 13; 
@@ -5639,6 +5798,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.select64by32);
 				    	frame_length = 4096;
 				    	currentResolution = 64; 
+						Log.i(LOG_TAG,"BENN: HardwareID R");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("M")) { 
 		    	 		 matrix_model = 3;
@@ -5646,6 +5806,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	 BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	 frame_length = 2048;
 				    	 currentResolution = 32;
+						 Log.i(LOG_TAG,"BENN: HardwareID M");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("N")) { 
 		    	 		 matrix_model = 11;
@@ -5653,6 +5814,7 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	 BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	 frame_length = 2048;
 				    	 currentResolution = 32; 
+						 Log.i(LOG_TAG,"BENN: HardwareID N");
 		    	 	}
 		    	 	else if (pixelHardwareID.substring(4,5).equals("Z")) {                    //then we have a pixel frame that is ios compatible that only supports adafruit 32x32 panel
 		    	 		matrix_model = 11;
@@ -5660,16 +5822,19 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	frame_length = 2048;
 				    	currentResolution = 32; 
+						Log.i(LOG_TAG,"BENN: HardwareID Z");
 		    	 	}
 		    	 	else {  //in theory, we should never go here
 		    	 		KIND = ioio.lib.api.RgbLedMatrix.Matrix.ADAFRUIT_32x32;
 				    	BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
 				    	frame_length = 2048;
 				    	currentResolution = 32; 
+						Log.i(LOG_TAG,"BENN: HardwareID ELSE");
 		    	 	}
 		  		}	
 		  
 		       else {
+				 Log.i(LOG_TAG,"BENN: Matrix Model :" + matrix_model);
 			     switch (matrix_model) {  //get this from the preferences
 				     case 0:
 				    	 KIND = ioio.lib.api.RgbLedMatrix.Matrix.SEEEDSTUDIO_32x16;
@@ -5820,6 +5985,12 @@ public class AsyncRefreshArt extends AsyncTask<Void, String, Void> {
 						 BitmapInputStream = getResources().openRawResource(R.raw.select128by32);
 						 frame_length = 8192;
 						 currentResolution = 128;
+						 break;
+					 case 25:
+						 KIND = ioio.lib.api.RgbLedMatrix.Matrix.PIXEL_V1_32x32;
+						 BitmapInputStream = getResources().openRawResource(R.raw.selectimage32);
+						 frame_length = 2048;
+						 currentResolution = 32;
 						 break;
 				    	 
 				     default:	    		 

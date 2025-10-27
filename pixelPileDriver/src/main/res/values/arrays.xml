@@ -27,6 +27,7 @@
     <item>64x32 P2.5</item>
     <item>64x64 P2.5</item>
     <item>PINDMD 128x32 P2.5</item>
+    <item>PIXEL V1 32x32</item>
 </string-array>
 	
 <string-array name="matrix_values">
@@ -54,6 +55,7 @@
     <item>22</item>
     <item>23</item>
     <item>24</item>
+    <item>25</item>
 </string-array>
 
   <string-array name="FPSOverride_options">

@@ -16,7 +16,7 @@
 
 package com.ledpixelart.piledriver;
 
-import com.google.android.vending.expansion.downloader.impl.DownloaderService;
+import com.ledpixelart.downloader.impl.DownloaderService;
 
 /**
  * This class demonstrates the minimal client implementation of the

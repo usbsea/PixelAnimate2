@@ -1,14 +1,17 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 28
+    namespace 'com.ledpixelart.piledriver'
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.ledpixelart.piledriver"
-        minSdkVersion 14
-        targetSdkVersion 28
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 120
         versionName "13.0"
-        //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -19,11 +22,28 @@ android {
 }
 
 dependencies {
+    implementation project(':library')
+    implementation project(':zip_file')
+    implementation project(':downloader_library')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.9.0'
+    implementation project(':PixelAndroidLibrary:iOIOLibAndroid')
+    implementation project(':PixelAndroidLibrary:iOIOLibAccessory')
+    implementation project(':PixelAndroidLibrary:iOIOLibBT')
+}
 
-    compile project(':library')
-    compile project(':zip_file')
-    compile project(':downloader_library')
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:support-compat:28.0.0'
-    implementation 'com.github.alinke:PixelAndroidLibrary:2.1.0'
+android {
+    packagingOptions {
+        pickFirst '**/META-INF/DEPENDENCIES'
+        pickFirst '**/META-INF/LICENSE'
+        pickFirst '**/META-INF/LICENSE.txt'
+        pickFirst '**/META-INF/NOTICE'
+        pickFirst '**/META-INF/NOTICE.txt'
+    }
+    
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }

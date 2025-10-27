@@ -21,9 +21,8 @@ import android.widget.ImageView;
 //import android.util.LruCache;
 //import android.widget.GridLayout.LayoutParams;
 
-import android.support.v4.util.LruCache;
-import android.support.v4.view.ViewPager.LayoutParams;
-import android.support.v7.appcompat.*;
+import androidx.collection.LruCache;
+import androidx.viewpager.widget.ViewPager.LayoutParams;
 
 
 @SuppressLint("NewApi")

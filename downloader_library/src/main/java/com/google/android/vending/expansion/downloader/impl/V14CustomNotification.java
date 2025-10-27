@@ -16,12 +16,15 @@
 
 package com.google.android.vending.expansion.downloader.impl;
 
-import com.android.vending.expansion.downloader.R;
+import com.ledpixelart.downloader.R;
 import com.google.android.vending.expansion.downloader.Helpers;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.os.Build;
 
 public class V14CustomNotification implements DownloadNotification.ICustomNotification {
 
@@ -59,7 +62,25 @@ public class V14CustomNotification implements DownloadNotification.ICustomNotifi
 
     @Override
     public Notification updateNotification(Context c) {
-        Notification.Builder builder = new Notification.Builder(c);
+        // Create notification channel for Android 8+ (API 26+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+            String channelId = "download_channel";
+            String channelName = "Download Progress";
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+            channel.setDescription("Shows download progress for expansion files");
+            channel.setShowBadge(false);
+            notificationManager.createNotificationChannel(channel);
+        }
+        
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(c, "download_channel");
+        } else {
+            builder = new Notification.Builder(c);
+        }
+        
         builder.setContentTitle(mTitle);
         if (mTotalKB > 0 && -1 != mCurrentKB) {
             builder.setProgress((int) (mTotalKB >> 8), (int) (mCurrentKB >> 8), false);

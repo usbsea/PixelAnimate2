@@ -17,8 +17,8 @@ package com.google.android.vending.licensing;
  * limitations under the License.
  */
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
+import java.net.URLDecoder;
+import java.io.UnsupportedEncodingException;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -378,18 +378,21 @@ public class APKExpansionPolicy implements Policy {
     private Map<String, String> decodeExtras(String extras) {
         Map<String, String> results = new HashMap<String, String>();
         try {
-            URI rawExtras = new URI("?" + extras);
-            List<NameValuePair> extraList = URLEncodedUtils.parse(rawExtras, "UTF-8");
-            for (NameValuePair item : extraList) {
-                String name = item.getName();
-                int i = 0;
-                while (results.containsKey(name)) {
-                    name = item.getName() + ++i;
+            String[] pairs = extras.split("&");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=", 2);
+                if (keyValue.length == 2) {
+                    String name = URLDecoder.decode(keyValue[0], "UTF-8");
+                    String value = URLDecoder.decode(keyValue[1], "UTF-8");
+                    int i = 0;
+                    while (results.containsKey(name)) {
+                        name = keyValue[0] + ++i;
+                    }
+                    results.put(name, value);
                 }
-                results.put(name, item.getValue());
             }
-        } catch (URISyntaxException e) {
-            Log.w(TAG, "Invalid syntax error while decoding extras data from server.");
+        } catch (UnsupportedEncodingException e) {
+            Log.w(TAG, "Invalid encoding error while decoding extras data from server.");
         }
         return results;
     }

@@ -16,7 +16,7 @@
 
 package com.google.android.vending.expansion.downloader.impl;
 
-import com.android.vending.expansion.downloader.R;
+import com.ledpixelart.downloader.R;
 import com.google.android.vending.expansion.downloader.DownloadProgressInfo;
 import com.google.android.vending.expansion.downloader.DownloaderClientMarshaller;
 import com.google.android.vending.expansion.downloader.Helpers;
@@ -134,8 +134,8 @@ public class DownloadNotification implements IDownloaderClient {
             mCurrentTitle = mLabel.toString();
             mCurrentNotification.tickerText = mLabel + ": " + mCurrentText;
             mCurrentNotification.icon = iconResource;
-            mCurrentNotification.setLatestEventInfo(mContext, mCurrentTitle, mCurrentText,
-                    mContentIntent);
+            // Set content intent directly (setLatestEventInfo is deprecated)
+            mCurrentNotification.contentIntent = mContentIntent;
             if (ongoingEvent) {
                 mCurrentNotification.flags |= Notification.FLAG_ONGOING_EVENT;
             } else {
@@ -156,7 +156,8 @@ public class DownloadNotification implements IDownloaderClient {
             // we just show the text
             mNotification.tickerText = mCurrentTitle;
             mNotification.icon = android.R.drawable.stat_sys_download;
-            mNotification.setLatestEventInfo(mContext, mLabel, mCurrentText, mContentIntent);
+            // Set content intent directly (setLatestEventInfo is deprecated)
+            mNotification.contentIntent = mContentIntent;
             mCurrentNotification = mNotification;
         } else {
             mCustomNotification.setCurrentBytes(progress.mOverallProgress);

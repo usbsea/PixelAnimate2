@@ -237,7 +237,8 @@
     <string name="noFreeSpace">Not Enough Free Space</string>    
     <string name="noFreeSpaceMsg">Sorry you do not have enough free space on your SD card storage for the new pixel art</string>    
     
-    
+    <string name="kilobytes_per_second">%1$d KB/s</string>
+    <string name="time_remaining">%1$s remaining</string>
     
    
 </resources>

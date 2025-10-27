@@ -16,7 +16,7 @@
 
 package com.google.android.vending.expansion.downloader.impl;
 
-import com.android.vending.expansion.downloader.R;
+import com.ledpixelart.downloader.R;
 import com.google.android.vending.expansion.downloader.Helpers;
 
 import android.app.Notification;

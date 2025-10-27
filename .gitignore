@@ -1,1 +1,15 @@
-PixelAnimate2.apk
+*.apk
+.DS_Store
+.idea/*
+.gradle/*
+bin/
+gen/
+doc/
+jar
+build/
+release/
+.gradle
+.settings
+
+local.properties
+proguard-project.txt

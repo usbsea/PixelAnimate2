@@ -16,7 +16,7 @@
 
 package com.google.android.vending.expansion.downloader;
 
-import com.android.vending.expansion.downloader.R;
+import com.ledpixelart.downloader.R;
 
 import android.content.Context;
 import android.os.Environment;
